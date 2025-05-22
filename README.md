@@ -1,3 +1,7 @@
+Fix CMakeList.txt
+
+lpose_utile etc...
+
 # Note!
 Our recently developed planner [EGO-Swarm](https://github.com/ZJU-FAST-Lab/ego-planner-swarm) is an evolution from EGO-Planner. 
 It is more robust and safe, and therefore, is more recommended to use.
