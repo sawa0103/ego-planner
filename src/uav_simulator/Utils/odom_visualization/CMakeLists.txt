@@ -162,7 +162,7 @@ add_executable(odom_visualization src/odom_visualization.cpp)
 target_link_libraries(odom_visualization
    ${catkin_LIBRARIES}
    ${ARMADILLO_LIBRARIES}
-   pose_utils
+   ${pose_utils_LIBRARIES}
 )
 
 #############
@@ -208,4 +208,4 @@ target_link_libraries(odom_visualization
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_irobot_msgs.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+# endif()}
