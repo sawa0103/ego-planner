@@ -2,11 +2,13 @@
 #include "nav_msgs/Odometry.h"
 #include "ego_planner/Bspline.h"
 #include "quadrotor_msgs/PositionCommand.h"
+#include <mavros_msgs/PositionTarget.h>
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
 #include <ros/ros.h>
 
 ros::Publisher pos_cmd_pub;
+ros::Publisher pos_target_pub;
 
 quadrotor_msgs::PositionCommand cmd;
 double pos_gain[3] = {0, 0, 0};
@@ -227,6 +229,24 @@ void cmdCallback(const ros::TimerEvent &e)
   last_yaw_ = cmd.yaw;
 
   pos_cmd_pub.publish(cmd);
+
+  mavros_msgs::PositionTarget target;
+  target.header.stamp = time_now;
+  target.header.frame_id = "world";
+  target.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+  target.type_mask = 0;  // use all fields
+  target.position.x = pos(0);
+  target.position.y = pos(1);
+  target.position.z = pos(2);
+  target.velocity.x = vel(0);
+  target.velocity.y = vel(1);
+  target.velocity.z = vel(2);
+  target.acceleration_or_force.x = acc(0);
+  target.acceleration_or_force.y = acc(1);
+  target.acceleration_or_force.z = acc(2);
+  target.yaw = yaw_yawdot.first;
+  target.yaw_rate = yaw_yawdot.second;
+  pos_target_pub.publish(target);
 }
 
 int main(int argc, char **argv)
@@ -238,6 +258,7 @@ int main(int argc, char **argv)
   ros::Subscriber bspline_sub = node.subscribe("planning/bspline", 10, bsplineCallback);
 
   pos_cmd_pub = node.advertise<quadrotor_msgs::PositionCommand>("/position_cmd", 50);
+  pos_target_pub = node.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local", 50);
 
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
 
@@ -260,5 +281,4 @@ int main(int argc, char **argv)
 
   ros::spin();
 
-  return 0;
-}
+  return 0;}
