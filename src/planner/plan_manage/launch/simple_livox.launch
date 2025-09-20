@@ -1,0 +1,75 @@
+<launch>
+  <!-- Simple Livox MID-360 launch file for ego-planner -->
+  
+  <!-- Basic map parameters -->
+  <arg name="map_size_x" value="60.0"/>
+  <arg name="map_size_y" value="60.0"/>
+  <arg name="map_size_z" value="5.0"/>
+
+  <!-- Use available odometry topic -->
+  <arg name="odom_topic" value="/Odometry" />
+
+  <!-- Main planning algorithm -->
+  <include file="$(find ego_planner)/launch/livox_only_param.xml">
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <arg name="odometry_topic" value="$(arg odom_topic)"/>
+
+    <!-- Use Livox point cloud -->
+    <arg name="cloud_topic" value="/livox/points"/>
+
+    <!-- Dummy camera parameters (required but not used) -->
+    <arg name="cx" value="320.0"/>
+    <arg name="cy" value="240.0"/>
+    <arg name="fx" value="400.0"/>
+    <arg name="fy" value="400.0"/>
+
+    <!-- Performance parameters -->
+    <arg name="max_vel" value="2.5" />
+    <arg name="max_acc" value="3.5" />
+    <arg name="planning_horizon" value="12.0" />
+    <arg name="flight_type" value="1" />
+    
+    <!-- Simple waypoint configuration -->
+    <arg name="point_num" value="1" />
+    <arg name="point0_x" value="10.0" />
+    <arg name="point0_y" value="0.0" />
+    <arg name="point0_z" value="1.5" />
+    <arg name="point1_x" value="0.0" />
+    <arg name="point1_y" value="0.0" />
+    <arg name="point1_z" value="1.5" />
+    <arg name="point2_x" value="0.0" />
+    <arg name="point2_y" value="0.0" />
+    <arg name="point2_z" value="1.5" />
+    <arg name="point3_x" value="0.0" />
+    <arg name="point3_y" value="0.0" />
+    <arg name="point3_z" value="1.5" />
+    <arg name="point4_x" value="0.0" />
+    <arg name="point4_y" value="0.0" />
+    <arg name="point4_z" value="1.5" />
+  </include>
+
+  <!-- Trajectory server -->
+  <node pkg="ego_planner" name="traj_server" type="traj_server" output="screen">
+    <remap from="/position_cmd" to="planning/pos_cmd"/>
+    <remap from="/odom_world" to="$(arg odom_topic)"/>
+    <param name="traj_server/time_forward" value="1.0" type="double"/>
+  </node>
+
+  <!-- Waypoint generator for goal selection -->
+  <node pkg="waypoint_generator" name="waypoint_generator" type="waypoint_generator" output="screen">
+    <remap from="~odom" to="$(arg odom_topic)"/>        
+    <remap from="~goal" to="/move_base_simple/goal"/>
+    <remap from="~traj_start_trigger" to="/traj_start_trigger" />
+    <param name="waypoint_type" value="manual-lonely-waypoint"/>    
+  </node>
+
+  <!-- RViz visualization -->
+  <include file="$(find ego_planner)/launch/rviz.launch"/>
+
+  <!-- Transform between frames if needed -->
+  <node pkg="tf" type="static_transform_publisher" name="livox_world_tf"
+        args="0 0 0 0 0 0 world livox_frame 50"/>
+
+</launch>
