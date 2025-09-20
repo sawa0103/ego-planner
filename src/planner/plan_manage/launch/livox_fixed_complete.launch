@@ -1,0 +1,129 @@
+<launch>
+  <!-- Fixed Livox integration with proper TF setup -->
+  
+  <!-- Map parameters -->
+  <arg name="map_size_x" value="60.0"/>
+  <arg name="map_size_y" value="60.0"/>
+  <arg name="map_size_z" value="5.0"/>
+  <arg name="odom_topic" value="/Odometry"/>
+
+  <!-- CRITICAL TF Setup -->
+  <!-- Create world frame as root -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_camera_init"
+        args="0 0 0 0 0 0 world camera_init"/>
+  
+  <!-- Connect livox_frame to the existing TF tree -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="body_to_livox"
+        args="0 0 0.1 0 0 0 body livox_frame"/>
+
+  <!-- Transform point cloud to world frame -->
+  <node pkg="pcl_ros" type="transform_pointcloud" name="livox_world_transformer" output="screen">
+    <remap from="cloud_in" to="/livox/points"/>
+    <remap from="cloud_out" to="/livox/points_world"/>
+    <param name="target_frame" value="world"/>
+    <param name="transform_tolerance" value="0.2"/>
+  </node>
+
+  <!-- EGO Planner Node with corrected parameters -->
+  <node pkg="ego_planner" name="ego_planner_node" type="ego_planner_node" output="screen">
+    <!-- Topic remapping -->
+    <remap from="/odom_world" to="$(arg odom_topic)"/>
+    <remap from="/grid_map/odom" to="$(arg odom_topic)"/>
+    <remap from="/grid_map/cloud" to="/livox/points_world"/>
+
+    <!-- Planning parameters -->
+    <param name="fsm/flight_type" value="1" type="int"/>
+    <param name="fsm/thresh_replan" value="1.5" type="double"/>
+    <param name="fsm/thresh_no_replan" value="2.0" type="double"/>
+    <param name="fsm/planning_horizon" value="12.0" type="double"/>
+    <param name="fsm/planning_horizen_time" value="4" type="double"/>
+    <param name="fsm/emergency_time_" value="1.0" type="double"/>
+    
+    <!-- Initial waypoint -->
+    <param name="fsm/waypoint_num" value="1" type="int"/>
+    <param name="fsm/waypoint0_x" value="5.0" type="double"/>
+    <param name="fsm/waypoint0_y" value="0.0" type="double"/>
+    <param name="fsm/waypoint0_z" value="1.5" type="double"/>
+
+    <!-- Grid map configuration - FIXED for world frame -->
+    <param name="grid_map/resolution" value="0.15"/>
+    <param name="grid_map/map_size_x" value="$(arg map_size_x)"/>
+    <param name="grid_map/map_size_y" value="$(arg map_size_y)"/>
+    <param name="grid_map/map_size_z" value="$(arg map_size_z)"/>
+    
+    <!-- Smaller local update range to avoid obstacles -->
+    <param name="grid_map/local_update_range_x" value="8.0"/>
+    <param name="grid_map/local_update_range_y" value="8.0"/>
+    <param name="grid_map/local_update_range_z" value="4.0"/>
+    
+    <!-- Reduced inflation to prevent false obstacles -->
+    <param name="grid_map/obstacles_inflation" value="0.1"/>
+    <param name="grid_map/local_map_margin" value="30"/>
+    <param name="grid_map/ground_height" value="-1.0"/>
+
+    <!-- Camera parameters (dummy) -->
+    <param name="grid_map/cx" value="320.0"/>
+    <param name="grid_map/cy" value="240.0"/>
+    <param name="grid_map/fx" value="400.0"/>
+    <param name="grid_map/fy" value="400.0"/>
+    <param name="grid_map/use_depth_filter" value="false"/>
+
+    <!-- Optimized occupancy parameters -->
+    <param name="grid_map/p_hit" value="0.60"/>
+    <param name="grid_map/p_miss" value="0.40"/>
+    <param name="grid_map/p_min" value="0.12"/>
+    <param name="grid_map/p_max" value="0.90"/>
+    <param name="grid_map/p_occ" value="0.75"/>
+    <param name="grid_map/min_ray_length" value="0.3"/>
+    <param name="grid_map/max_ray_length" value="80.0"/>
+    
+    <param name="grid_map/virtual_ceil_height" value="3.5"/>
+    <param name="grid_map/visualization_truncate_height" value="3.0"/>
+    <param name="grid_map/show_occ_time" value="false"/>
+    <param name="grid_map/pose_type" value="2"/>
+    
+    <!-- CRITICAL: Use world frame for fixed mapping -->
+    <param name="grid_map/frame_id" value="world"/>
+
+    <!-- Conservative motion parameters -->
+    <param name="manager/max_vel" value="1.5" type="double"/>
+    <param name="manager/max_acc" value="2.0" type="double"/>
+    <param name="manager/max_jerk" value="4" type="double"/>
+    <param name="manager/control_points_distance" value="0.4" type="double"/>
+    <param name="manager/feasibility_tolerance" value="0.1" type="double"/>
+    <param name="manager/planning_horizon" value="12.0" type="double"/>
+
+    <!-- Trajectory optimization -->
+    <param name="optimization/lambda_smooth" value="1.0" type="double"/>
+    <param name="optimization/lambda_collision" value="0.8" type="double"/>
+    <param name="optimization/lambda_feasibility" value="0.2" type="double"/>
+    <param name="optimization/lambda_fitness" value="1.0" type="double"/>
+    <param name="optimization/dist0" value="0.6" type="double"/>
+    <param name="optimization/max_vel" value="1.5" type="double"/>
+    <param name="optimization/max_acc" value="2.0" type="double"/>
+
+    <!-- B-spline parameters -->
+    <param name="bspline/limit_vel" value="1.5" type="double"/>
+    <param name="bspline/limit_acc" value="2.0" type="double"/>
+    <param name="bspline/limit_ratio" value="1.1" type="double"/>
+  </node>
+
+  <!-- Trajectory server -->
+  <node pkg="ego_planner" name="traj_server" type="traj_server" output="screen">
+    <remap from="/position_cmd" to="planning/pos_cmd"/>
+    <remap from="/odom_world" to="$(arg odom_topic)"/>
+    <param name="traj_server/time_forward" value="1.0" type="double"/>
+  </node>
+
+  <!-- Waypoint generator -->
+  <node pkg="waypoint_generator" name="waypoint_generator" type="waypoint_generator" output="screen">
+    <remap from="~odom" to="$(arg odom_topic)"/>
+    <remap from="~goal" to="/move_base_simple/goal"/>
+    <remap from="~traj_start_trigger" to="/traj_start_trigger"/>
+    <param name="waypoint_type" value="manual-lonely-waypoint"/>
+  </node>
+
+  <!-- Debug: Monitor TF and topics -->
+  <node pkg="tf2_ros" type="tf2_echo" name="tf_monitor" args="world body" output="screen"/>
+
+</launch>

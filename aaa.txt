@@ -1,0 +1,2 @@
+[ERROR] [1758374697.917072874]: Ignoring transform for child_frame_id "50" from authority "unknown_publisher" because of an invalid quaternion in the transform (0.000000 0.000000 0.000000 0.000000)
+[ERROR] [1758374697.917193900]: Ignoring transform for child_frame_id "50" from authority "unknown_publisher" because of an invalid quaternion in the transform (0.000000 0.000000 0.000000 0.000000)
