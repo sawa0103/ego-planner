@@ -1,2 +1,26 @@
-[ERROR] [1758374697.917072874]: Ignoring transform for child_frame_id "50" from authority "unknown_publisher" because of an invalid quaternion in the transform (0.000000 0.000000 0.000000 0.000000)
-[ERROR] [1758374697.917193900]: Ignoring transform for child_frame_id "50" from authority "unknown_publisher" because of an invalid quaternion in the transform (0.000000 0.000000 0.000000 0.000000)
+[rebo replan]: -------------------------------------272
+start:  -0.142  -0.101 -0.0232, 0 0 0
+goal: 3.16 -7.59 0.436,  0.403 -0.918 0.0399
+iter=6,time(ms)=0.076,rebound.
+ -0.14   -0.1 -0.023
+ -0.14   -0.1 -0.023
+-0.095  -0.24   -0.2
+0.017 -0.44 -0.42
+[WARN] [1758376383.877726870]: First 3 control points in obstacles! return false, t=0.000000
+first_optimize_step_success=0
+final_plan_success=0
+[FSM]: from GEN_NEW_TRAJ to GEN_NEW_TRAJ
+^C
+[rebo replan]: -------------------------------------273
+start:  -0.142  -0.101 -0.0232, 0 0 0
+goal: 3.16 -7.59 0.436,  0.403 -0.918 0.0399
+[ERROR] [1758376383.887154857]: ERROR! the drone is in obstacle. This should not happen.
+iter=6,time(ms)=0.8,rebound.
+ -0.14   -0.1 -0.023
+ -0.14   -0.1 -0.023
+ 0.064 -0.092  -0.19
+ 0.41 -0.13 -0.38
+[WARN] [1758376383.889086228]: First 3 control points in obstacles! return false, t=0.000000
+first_optimize_step_success=0
+final_plan_success=0
+[FSM]: from GEN_NEW_TRAJ to GEN_NEW_TRAJ
